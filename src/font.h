@@ -14,6 +14,7 @@ typedef enum
 {
 	Font_Bold,
 	Font_Arial,
+	Font_CDR,
 } Font;
 
 typedef enum
