@@ -24,6 +24,8 @@
 #include "stage.h"
 #include "character/gf.h"
 
+#include "movie.h"
+
 //Menu messages
 static const char *funny_messages[][2] = {
 	{"PSX PORT BY CUCKYDEV", "YOU KNOW IT"},
@@ -475,6 +477,11 @@ void Menu_Tick(void)
 				menu.page_state.title.fadespd = FIXED_DEC(300,1);
 				menu.next_page = MenuPage_Main;
 				menu.next_select = 0;
+			}
+
+			if (pad_state.press & PAD_R1)
+			{
+				Movie_Play("\\MOVIE\\UGH.STR;1", 300);
 			}
 			
 			//Draw Friday Night Funkin' logo
