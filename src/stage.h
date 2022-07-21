@@ -15,6 +15,7 @@
 #include "character.h"
 #include "player.h"
 #include "object.h"
+#include "font.h"
 
 #include "network.h"
 
@@ -242,6 +243,9 @@ typedef struct
 	
 	PlayerState player_state[2];
 	s32 max_score;
+
+	//fonts
+	FontData font_arial, font_cdr;
 	
 	enum
 	{
@@ -251,6 +255,8 @@ typedef struct
 		StageState_DeadDrop,   //Mic drop
 		StageState_DeadRetry,  //Retry prompt
 		StageState_DeadDecide, //Decided
+		StageState_Dialogue,   //Dialogue, for week 6.
+		StageState_Cutscene,   //In-Engine cutscene, for doing something like the Week 7 cutscenes without video.
 	} state;
 	
 	u8 note_swap;

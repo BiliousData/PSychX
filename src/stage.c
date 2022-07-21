@@ -23,7 +23,7 @@
 #include "object/splash.h"
 
 //Stage constants
-//#define STAGE_PERFECT //Play all notes perfectly
+#define STAGE_PERFECT //Play all notes perfectly
 //#define STAGE_NOHUD //Disable the HUD
 
 //#define STAGE_FREECAM //Freecam
@@ -99,6 +99,30 @@ static void Stage_CutVocal(void)
 	{
 		Audio_ChannelXA(stage.stage_def->music_channel + 1);
 		stage.flag &= ~STAGE_FLAG_VOCAL_ACTIVE;
+	}
+}
+
+u8 dselect;
+int senpaix;
+u16 bfx;
+
+static void Dia_MovePort(boolean movemode)
+{
+	if (movemode == 0)
+	{
+		if (senpaix < 32)
+			senpaix += 8;
+
+		if (bfx < 354)
+			bfx += 8;
+	}
+	else
+	{
+		if (senpaix > -102)
+			senpaix -= 8;
+
+		if (bfx > 172)
+			bfx -= 8;
 	}
 }
 
@@ -701,16 +725,24 @@ static void Stage_DrawHealth(s16 health, u8 i, s8 ox)
 {
 	//Check if we should use 'dying' frame
 	s8 dying;
-	if (ox < 0)
+	s8 winning;
+	//Check what icon type to use
+	if (ox == -1)
+	{
 		dying = (health >= 18000) * 24;
+		winning = (health <= 2000) * 48;
+	}
 	else
+	{
+		winning = (health >= 18000) * 48;
 		dying = (health <= 2000) * 24;
+	}
 	
 	//Get src and dst
 	fixed_t hx = (128 << FIXED_SHIFT) * (10000 - health) / 10000;
 	RECT src = {
-		(i % 5) * 48 + dying,
-		16 + (i / 5) * 24,
+		(i % 3) * 72 + dying + winning,
+		16 + (i / 3) * 24,
 		24,
 		24
 	};
@@ -1204,8 +1236,19 @@ static void Stage_LoadState(void)
 	stage.flag = STAGE_FLAG_VOCAL_ACTIVE;
 	
 	stage.gf_speed = 1 << 2;
-	
-	stage.state = StageState_Play;
+
+	if (stage.story)
+	{
+		if (stage.stage_id >= StageId_6_1 && stage.stage_id <= StageId_6_3)
+		{
+			Stage_LoadDia();
+			stage.state = StageState_Dialogue;
+		}
+		else
+			stage.state = StageState_Play;
+	}
+	else
+		stage.state = StageState_Play;
 	
 	stage.player_state[0].character = stage.player;
 	stage.player_state[1].character = stage.opponent;
@@ -1221,6 +1264,8 @@ static void Stage_LoadState(void)
 		strcpy(stage.player_state[i].score_text, "0");
 		
 		stage.player_state[i].pad_held = stage.player_state[i].pad_press = 0;
+
+		dselect = 0;
 	}
 	
 	ObjectList_Free(&stage.objlist_splash);
@@ -1388,6 +1433,14 @@ static boolean Stage_NextLoad(void)
 		Timer_Reset();
 		return true;
 	}
+}
+
+//load dialogue related files
+void Stage_LoadDia(void)
+{
+	Stage *this = (Stage*)Mem_Alloc(sizeof(Stage));
+
+	FontData_Load(&stage.font_arial, Font_Arial);
 }
 
 void Stage_Tick(void)
@@ -1979,6 +2032,236 @@ void Stage_Tick(void)
 			//Scroll camera and tick player
 			Stage_ScrollCamera();
 			stage.player->tick(stage.player);
+			break;
+		}
+		case StageState_Dialogue:
+		{
+			//oh boy 2.0
+
+			static const struct
+			{
+				const char *text;
+				boolean talker;
+			}senpaidia[] = {
+				{"Ah, a new fair maiden has come\nin search of true love!",0},
+				{"A serenade between gentlemen\nshall decide where her beautiful\nheart shall reside.",0},
+				{"Beep bo bop",1},
+			};
+
+			static const struct
+			{
+				const char *text;
+				boolean talker;
+			}rosesdia[] = {
+				{"Not bad for an ugly worm.",0},
+				{"But this time I'll rip your nuts off\nright after your girlfriend\nfinishes gargling mine.",0},
+				{"Bop beep be be skdoo bep",1},
+			};
+
+			static const struct
+			{
+				const char *text;
+				boolean talker;
+			}thornsdia[] = {
+				{"Direct contact with real humans,\nafter being trapped in here for\nso long...",0},
+				{"and HER of all people.",0},
+				{"I'll make her father pay for what\nhe's done to me and all the\nothers...."},
+				{"I'll beat you and make you take\nmy place.",0},
+				{"You don't mind your bodies\nbeing borrowed right? It's only\nfair...",0},
+			};
+			
+			
+
+			RECT weebbox_src = {0, 198, 155, 58};
+
+			RECT spookbox = {10, 121, 145 * 2, 46 * 2};
+
+			RECT hand_src = {205, 245, 17, 11};
+
+			RECT senpai_src = {54, 141, 51, 57};
+
+			RECT senmad_src = {0, 140, 54, 58};
+
+			RECT bf_src = {105, 153, 58, 45};
+
+			RECT spirit_src = {204, 139, 47, 106};
+
+			//???
+			Stage *this = (Stage*)this;
+
+			//play dialogue song
+			if (Audio_PlayingXA() != 1)
+			{
+				switch (stage.stage_id)
+				{
+					case StageId_6_1:
+						Audio_PlayXA_Track(XA_Lunchbox, 0x40, 0, true); //play song
+						break;
+					case StageId_6_3:
+						Audio_PlayXA_Track(XA_LunchboxScary, 0x40, 1, true); //playsong
+						break;
+				}
+			}
+
+			//Text drawing
+			switch (stage.stage_id)
+			{
+				case StageId_6_1:
+				{
+					//draw main text
+					stage.font_arial.draw_col(&stage.font_arial,
+						senpaidia[dselect].text,
+						35,
+						150,
+						FontAlign_Left,
+						52 >> 1,
+						29 >> 1,
+						31 >> 1
+					);
+					//draw pink text behind
+					stage.font_arial.draw_col(&stage.font_arial,
+						senpaidia[dselect].text,
+						36,
+						151,
+						FontAlign_Left,
+						187 >> 1,
+						122 >> 1,
+						123 >> 1
+					);
+
+					if (dselect == 3)
+					{
+						Audio_StopXA();
+						stage.state = StageState_Play;
+					}
+					Dia_MovePort(senpaidia[dselect].talker);
+					break;
+				}
+				case StageId_6_2:
+				{
+					//draw main text
+					stage.font_arial.draw_col(&stage.font_arial,
+						rosesdia[dselect].text,
+						35,
+						150,
+						FontAlign_Left,
+						52 >> 1,
+						29 >> 1,
+						31 >> 1
+					);
+					//draw pink text behind
+					stage.font_arial.draw_col(&stage.font_arial,
+						rosesdia[dselect].text,
+						36,
+						151,
+						FontAlign_Left,
+						187 >> 1,
+						122 >> 1,
+						123 >> 1
+					);
+
+					if (dselect == 3)
+					{
+						Audio_StopXA();
+						stage.state = StageState_Play;
+					}
+					Dia_MovePort(rosesdia[dselect].talker);
+					break;
+				}
+				case StageId_6_3:
+				{
+					//draw text
+					stage.font_arial.draw(&stage.font_arial,
+						thornsdia[dselect].text,
+						35,
+						150,
+						FontAlign_Left
+					);
+
+					if (dselect == 5)
+					{
+						Audio_StopXA();
+						stage.state = StageState_Play;
+					}
+					Dia_MovePort(thornsdia[dselect].talker);
+					break;
+				}
+				default:
+					break;
+			}
+
+			//controller shit
+			//progress to next message
+			if (pad_state.press & PAD_CROSS)
+			{
+				dselect++;
+			}
+
+
+			//draw dialogue box
+			RECT weebbox_dst = {5, 114, 155 * 2, 58 * 2};
+
+			switch (stage.stage_id)
+			{
+				case StageId_6_3:
+					Gfx_DrawRect(&spookbox, 0, 0, 0);
+					break;
+				default:
+					Gfx_DrawTex(&stage.tex_hud1, &weebbox_src, &weebbox_dst);
+					break;
+			}
+
+
+			RECT senpai_dst = {senpaix, 14, senpai_src.w * 2, senpai_src.h * 2};
+
+			RECT senmad_dst = {senpaix, 12, senmad_src.w * 2, senmad_src.h * 2};
+
+			switch (stage.stage_id)
+			{
+				case StageId_6_1:
+					Gfx_DrawTex(&stage.tex_hud1, &senpai_src, &senpai_dst);
+					break;
+				case StageId_6_2:
+					Gfx_DrawTex(&stage.tex_hud1, &senmad_src, &senmad_dst);
+			}
+
+			RECT bf_dst = {bfx, 38, bf_src.w * 2, bf_src.h * 2};
+			Gfx_DrawTex(&stage.tex_hud1, &bf_src, &bf_dst);
+
+
+
+			//draw transparent blueish grey filter
+			static const RECT walterwhite = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
+			Gfx_BlendRect(&walterwhite, 174, 219, 224, 0);
+
+
+			//Draw stage foreground
+			if (stage.back->draw_fg != NULL)
+				stage.back->draw_fg(stage.back);
+			
+			//Tick foreground objects
+			ObjectList_Tick(&stage.objlist_fg);
+			
+			//Tick characters
+			stage.player->tick(stage.player);
+			stage.opponent->tick(stage.opponent);
+			
+			//Draw stage middle
+			if (stage.back->draw_md != NULL)
+				stage.back->draw_md(stage.back);
+			
+			//Tick girlfriend
+			if (stage.gf != NULL)
+				stage.gf->tick(stage.gf);
+			
+			//Tick background objects
+			ObjectList_Tick(&stage.objlist_bg);
+			
+			//Draw stage background
+			if (stage.back->draw_bg != NULL)
+				stage.back->draw_bg(stage.back);
+
+			Stage_ScrollCamera();
 			break;
 		}
 		default:

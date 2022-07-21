@@ -212,6 +212,28 @@ void Gfx_BlitTexCol(Gfx_Tex *tex, const RECT *src, s32 x, s32 y, u8 r, u8 g, u8 
 	nextpri += sizeof(DR_TPAGE);
 }
 
+void Gfx_BlitTexColSize(Gfx_Tex *tex, const RECT *src, const RECT *dst, s32 x, s32 y, u8 r, u8 g, u8 b)
+{
+	//Add sprite
+	SPRT *sprt = (SPRT*)nextpri;
+	setSprt(sprt);
+	setXY0(sprt, x, y);
+	setWH(sprt, dst->w, dst->h);
+	setUV0(sprt, src->x, src->y);
+	setRGB0(sprt, r, g, b);
+	sprt->clut = tex->clut;
+	
+	addPrim(ot[db], sprt);
+	nextpri += sizeof(SPRT);
+	
+	//Add tpage change (TODO: reduce tpage changes)
+	DR_TPAGE *tpage = (DR_TPAGE*)nextpri;
+	setDrawTPage(tpage, 0, 1, tex->tpage);
+	
+	addPrim(ot[db], tpage);
+	nextpri += sizeof(DR_TPAGE);
+}
+
 void Gfx_BlitTex(Gfx_Tex *tex, const RECT *src, s32 x, s32 y)
 {
 	Gfx_BlitTexCol(tex, src, x, y, 0x80, 0x80, 0x80);
@@ -296,6 +318,53 @@ void Gfx_DrawTexCol(Gfx_Tex *tex, const RECT *src, const RECT *dst, u8 r, u8 g, 
 	addPrim(ot[db], quad);
 	nextpri += sizeof(POLY_FT4);
 }
+
+//I'll come back to this later.
+
+//void Gfx_DrawRotatedTex(Gfx_Tex *tex, const RECT *src, const RECT *dst, u8 degree)
+//{
+//	//okay uh to be honest I have very little idea of what any of this shit actually does
+//	//I literally just took steve's tank from week 7 and shoved it in here lmao
+//	
+//	s16 tank_sin = MUtil_Sin(degree);
+//	s16 tank_cos = MUtil_Cos(degree);
+//	
+//	
+//	//Get tank rotated points
+//	POINT tank_p0 = {-45, -45};
+//	MUtil_RotatePoint(&tank_p0, tank_sin, tank_cos);
+//	
+//	POINT tank_p1 = { 45, -45};
+//	MUtil_RotatePoint(&tank_p1, tank_sin, tank_cos);
+//	
+//	POINT tank_p2 = {-45,  45};
+//	MUtil_RotatePoint(&tank_p2, tank_sin, tank_cos);
+//	
+//	POINT tank_p3 = { 45,  45};
+//	MUtil_RotatePoint(&tank_p3, tank_sin, tank_cos);
+//	
+//	//Draw tank
+//
+//	
+//	POINT_FIXED tank_d0 = {
+//	this->tank_x + ((fixed_t)tank_p0.x << FIXED_SHIFT) - fx,
+//	      tank_y + ((fixed_t)tank_p0.y << FIXED_SHIFT) - fy
+//	};
+//	POINT_FIXED tank_d1 = {
+//	this->tank_x + ((fixed_t)tank_p1.x << FIXED_SHIFT) - fx,
+//	      tank_y + ((fixed_t)tank_p1.y << FIXED_SHIFT) - fy
+//	};
+//	POINT_FIXED tank_d2 = {
+//	this->tank_x + ((fixed_t)tank_p2.x << FIXED_SHIFT) - fx,
+//	      tank_y + ((fixed_t)tank_p2.y << FIXED_SHIFT) - fy
+//	};
+//	POINT_FIXED tank_d3 = {
+//	this->tank_x + ((fixed_t)tank_p3.x << FIXED_SHIFT) - fx,
+//	      tank_y + ((fixed_t)tank_p3.y << FIXED_SHIFT) - fy
+//	};
+//	
+//	Stage_DrawTexArb(&tex, &src, &tank_d0, &tank_d1, &tank_d2, &tank_d3, stage.camera.bzoom);
+//}
 
 void Gfx_DrawTex(Gfx_Tex *tex, const RECT *src, const RECT *dst)
 {

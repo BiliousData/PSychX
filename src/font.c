@@ -92,8 +92,14 @@ void Font_Arial_DrawCol(struct FontData *this, const char *text, s32 x, s32 y, F
 	
 	//Draw string character by character
 	u8 c;
+	s16 xhold = x;
 	while ((c = *text++) != '\0')
 	{
+		if (c == '\n')
+		{
+		x = xhold;
+		y += 11;
+		}
 		//Shift and validate character
 		if ((c -= 0x20) >= 0x60)
 			continue;
@@ -104,6 +110,45 @@ void Font_Arial_DrawCol(struct FontData *this, const char *text, s32 x, s32 y, F
 		
 		//Increment X
 		x += font_arialmap[c].gw;
+	}
+}
+
+void Font_Arial_DrawCol2X(struct FontData *this, const char *text, s32 x, s32 y, FontAlign align, u8 r, u8 g, u8 b)
+{
+	//Offset position based off alignment
+	switch (align)
+	{
+		case FontAlign_Left:
+			break;
+		case FontAlign_Center:
+			x -= Font_Arial_GetWidth(this, text) >> 1;
+			break;
+		case FontAlign_Right:
+			x -= Font_Arial_GetWidth(this, text);
+			break;
+	}
+	
+	//Draw string character by character
+	u8 c;
+	s16 xhold = x;
+	while ((c = *text++) != '\0')
+	{
+		if (c == '\n')
+		{
+		x = xhold;
+		y += 22;
+		}
+		//Shift and validate character
+		if ((c -= 0x20) >= 0x60)
+			continue;
+		
+		//Draw character
+		RECT src = {font_arialmap[c].ix, font_arialmap[c].iy, font_arialmap[c].iw, font_arialmap[c].ih};
+		RECT dst = {x, y + font_arialmap[c].gy * 2, font_arialmap[c].iw * 2, font_arialmap[c].ih * 2};
+		Gfx_DrawTexCol(&this->tex, &src, &dst, r, g, b);
+		
+		//Increment X
+		x += font_arialmap[c].gw * 2;
 	}
 }
 
@@ -192,6 +237,7 @@ void FontData_Load(FontData *this, Font font)
 			Gfx_LoadTex(&this->tex, IO_Read("\\FONT\\ARIAL.TIM;1"), GFX_LOADTEX_FREE);
 			this->get_width = Font_Arial_GetWidth;
 			this->draw_col = Font_Arial_DrawCol;
+			this->draw2x = Font_Arial_DrawCol2X;
 			break;
 		case Font_CDR:
 			//Load texture and set functions

@@ -31,6 +31,7 @@ typedef enum
 	XA_KapiB,  //KAPIB.XA
 	XA_ClwnA,  //CLWNA.XA
 	XA_ClwnB,  //CLWNB.XA
+	XA_Cut,
 	
 	XA_Max,
 } XA_File;
@@ -90,6 +91,10 @@ typedef enum
 	//CLWNB.XA
 	XA_Hellclown,   //Hellclown
 	XA_Expurgation, //Expurgation
+	//CUT.XA
+	XA_Lunchbox,    //Lunchbox
+	XA_LunchboxScary, //Lunchbox Scary
+	XA_KlaskiiRomper, //Klaskii Romper (Week 7 cutscene & Kickstarter theme)
 	
 	XA_TrackMax,
 } XA_Track;
