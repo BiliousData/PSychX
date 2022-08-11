@@ -440,6 +440,10 @@ Character *Char_BF_New(fixed_t x, fixed_t y)
 		frag->xsp += RandomRange(-4, 4);
 		frag->ysp += RandomRange(-2, 2);
 	}
+
+	this->character.hr = 47;
+	this->character.hg = 176;
+	this->character.hb = 209;
 	
 	return (Character*)this;
 }

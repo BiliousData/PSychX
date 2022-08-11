@@ -1244,6 +1244,10 @@ static void Stage_LoadState(void)
 			Stage_LoadDia();
 			stage.state = StageState_Dialogue;
 		}
+		else if (stage.stage_id >= StageId_7_1 && stage.stage_id <= StageId_7_3)
+		{
+			stage.state = StageState_Cutscene;
+		}
 		else
 			stage.state = StageState_Play;
 	}
@@ -1271,6 +1275,21 @@ static void Stage_LoadState(void)
 	ObjectList_Free(&stage.objlist_splash);
 	ObjectList_Free(&stage.objlist_fg);
 	ObjectList_Free(&stage.objlist_bg);
+}
+
+//prepare health in event of no set health color
+static void Stage_HealthPrep(void)
+{
+	stage.opponent->hr = 254;
+	stage.opponent->hg = 0;
+	stage.opponent->hb = 0;
+
+	stage.player->hr = 94;
+	stage.player->hg = 255;
+	stage.player->hb = 53;
+
+	//yeah
+	//that's it
 }
 
 //Stage functions
@@ -1389,6 +1408,7 @@ static boolean Stage_NextLoad(void)
 		if (load & STAGE_LOAD_STAGE)
 			Stage_LoadStage();
 		
+		
 		//Load characters
 		Stage_SwapChars();
 		if (load & STAGE_LOAD_PLAYER)
@@ -1467,6 +1487,7 @@ void Stage_Tick(void)
 			stage.trans = (stage.state == StageState_Play) ? StageTrans_Menu : StageTrans_Reload;
 			Trans_Start();
 		}
+
 	}
 	
 	if (Trans_Tick())
@@ -1889,9 +1910,9 @@ void Stage_Tick(void)
 					health_dst.y = -health_dst.y - health_dst.h;
 				
 				health_dst.w = health_fill.w << FIXED_SHIFT;
-				Stage_DrawTex(&stage.tex_hud1, &health_fill, &health_dst, stage.bump);
+				Stage_DrawTexCol(&stage.tex_hud1, &health_fill, &health_dst, stage.bump, stage.opponent->hr / 2, stage.opponent->hg / 2, stage.opponent->hb / 2); //opponent
 				health_dst.w = health_back.w << FIXED_SHIFT;
-				Stage_DrawTex(&stage.tex_hud1, &health_back, &health_dst, stage.bump);
+				Stage_DrawTexCol(&stage.tex_hud1, &health_back, &health_dst, stage.bump, stage.player->hr / 2, stage.player->hg / 2, stage.player->hb / 2); //player
 			}
 			
 			//Hardcoded stage stuff
@@ -2234,6 +2255,42 @@ void Stage_Tick(void)
 			static const RECT walterwhite = {0, 0, SCREEN_WIDTH, SCREEN_HEIGHT};
 			Gfx_BlendRect(&walterwhite, 174, 219, 224, 0);
 
+
+			//Draw stage foreground
+			if (stage.back->draw_fg != NULL)
+				stage.back->draw_fg(stage.back);
+			
+			//Tick foreground objects
+			ObjectList_Tick(&stage.objlist_fg);
+			
+			//Tick characters
+			stage.player->tick(stage.player);
+			stage.opponent->tick(stage.opponent);
+			
+			//Draw stage middle
+			if (stage.back->draw_md != NULL)
+				stage.back->draw_md(stage.back);
+			
+			//Tick girlfriend
+			if (stage.gf != NULL)
+				stage.gf->tick(stage.gf);
+			
+			//Tick background objects
+			ObjectList_Tick(&stage.objlist_bg);
+			
+			//Draw stage background
+			if (stage.back->draw_bg != NULL)
+				stage.back->draw_bg(stage.back);
+
+			Stage_ScrollCamera();
+			break;
+		}
+		case StageState_Cutscene:
+		{
+			if (Audio_PlayingXA() != 1)
+			{
+				Audio_PlayXA_Track(XA_KlaskiiRomper, 0x40, 2, true); //play song
+			}
 
 			//Draw stage foreground
 			if (stage.back->draw_fg != NULL)

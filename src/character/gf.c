@@ -274,6 +274,10 @@ Character *Char_GF_New(fixed_t x, fixed_t y)
 		this->pico_p = ((Back_Week7*)stage.back)->pico_chart;
 	else
 		this->pico_p = NULL;
-	
+
+	this->character.hr = 165;
+	this->character.hg = 0;
+	this->character.hb = 77;
+
 	return (Character*)this;
 }

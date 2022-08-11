@@ -61,7 +61,7 @@ static const XA_TrackDef xa_tracks[] = {
 	{XA_ClwnB, XA_LENGTH(21886)}, //XA_Hellclown
 	{XA_ClwnB, XA_LENGTH(19550)}, //XA_Expurgation
 	//CUT.XA
-	{XA_Cut, XA_LENGTH(2900)},    //XA_Lunchbox
+	{XA_Cut, XA_LENGTH(2950)},    //XA_Lunchbox
 	{XA_Cut, XA_LENGTH(1100)},    //XA_LunchboxScary
 	{XA_Cut, XA_LENGTH(13400)},   //XA_KlaskiiRomper
 };

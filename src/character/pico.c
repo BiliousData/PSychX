@@ -152,6 +152,10 @@ Character *Char_Pico_New(fixed_t x, fixed_t y)
 	
 	//Initialize render state
 	this->tex_id = this->frame = 0xFF;
+
+	this->character.hr = 184;
+	this->character.hg = 216;
+	this->character.hb = 84;
 	
 	return (Character*)this;
 }

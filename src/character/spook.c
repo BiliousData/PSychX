@@ -185,6 +185,10 @@ Character *Char_Spook_New(fixed_t x, fixed_t y)
 	
 	//Initialize render state
 	this->tex_id = this->frame = 0xFF;
+
+	this->character.hr = 213;
+	this->character.hg = 126;
+	this->character.hb = 0;
 	
 	return (Character*)this;
 }

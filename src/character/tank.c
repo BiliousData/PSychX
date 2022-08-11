@@ -275,6 +275,10 @@ Character *Char_Tank_New(fixed_t x, fixed_t y)
 	
 	//Initialize render state
 	this->tex_id = this->frame = 0xFF;
+
+	this->character.hr = 223;
+	this->character.hg = 225;
+	this->character.hb = 222;
 	
 	return (Character*)this;
 }

@@ -205,6 +205,10 @@ Character *Char_Mom_New(fixed_t x, fixed_t y)
 	
 	//Initialize render state
 	this->tex_id = this->frame = 0xFF;
+
+	this->character.hr = 218;
+	this->character.hg = 84;
+	this->character.hb = 145;
 	
 	return (Character*)this;
 }
