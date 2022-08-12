@@ -1,4 +1,0 @@
-1 xa vidyagaemsv.xa 1 0
-1 xa vidyagaemsi.xa 1 1
-1 xa sagev.xa 1 2
-1 xa sagei.xa 1 3

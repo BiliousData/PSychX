@@ -1,4 +1,0 @@
-1 xa harmonyv.xa 1 0
-1 xa harmonyi.xa 1 1
-1 xa infinitriggerv.xa 1 2
-1 xa infinitriggeri.xa 1 3

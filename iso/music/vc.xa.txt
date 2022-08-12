@@ -1,4 +1,0 @@
-1 xa nogamesv.xa 1 0
-1 xa nogamesi.xa 1 1
-1 xa sneedv.xa 1 2
-1 xa sneedi.xa 1 3
