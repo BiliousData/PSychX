@@ -1,4 +1,0 @@
-1 xa lunch.xa 1 0
-1 xa lunchs.xa 1 1
-1 xa klaskii.xa 1 2
-1 null

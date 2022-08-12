@@ -52,29 +52,12 @@ static const u8 note_anims[4][3] = {
 
 //Stage definitions
 #include "character/bf.h"
-#include "character/bfweeb.h"
 #include "character/dad.h"
-#include "character/spook.h"
-#include "character/pico.h"
-#include "character/mom.h"
-#include "character/xmasbf.h"
-#include "character/xmasp.h"
-#include "character/senpai.h"
-#include "character/senpaim.h"
-#include "character/spirit.h"
-#include "character/tank.h"
 #include "character/gf.h"
-#include "character/gfweeb.h"
 #include "character/clucky.h"
 
 #include "stage/dummy.h"
 #include "stage/week1.h"
-#include "stage/week2.h"
-#include "stage/week3.h"
-#include "stage/week4.h"
-#include "stage/week5.h"
-#include "stage/week6.h"
-#include "stage/week7.h"
 
 static const StageDef stage_defs[StageId_Max] = {
 	#include "stagedef_disc1.h"
@@ -163,11 +146,11 @@ static void Stage_ScrollCamera(void)
 		stage.camera.zoom += FIXED_MUL(dz, stage.camera.td);
 		
 		//Shake in Week 4
-		if (stage.stage_id >= StageId_4_1 && stage.stage_id <= StageId_4_3)
-		{
-			stage.camera.x += RandomRange(FIXED_DEC(-1,10),FIXED_DEC(1,10));
-			stage.camera.y += RandomRange(FIXED_DEC(-25,100),FIXED_DEC(25,100));
-		}
+		//if (stage.stage_id >= StageId_4_1 && stage.stage_id <= StageId_4_3)
+		//{
+		//	stage.camera.x += RandomRange(FIXED_DEC(-1,10),FIXED_DEC(1,10));
+		//	stage.camera.y += RandomRange(FIXED_DEC(-25,100),FIXED_DEC(25,100));
+		//}
 	#endif
 	
 	//Update other camera stuff
@@ -385,9 +368,6 @@ static void Stage_NoteCheck(PlayerState *this, u8 type)
 			//Hit the mine
 			note->type |= NOTE_FLAG_HIT;
 			
-			if (stage.stage_id == StageId_Clwn_4)
-				this->health = -0x7000;
-			else
 				this->health -= 2000;
 			if (this->character->spec & CHAR_SPEC_MISSANIM)
 				this->character->set_anim(this->character, note_anims[type & 0x3][2]);
@@ -619,47 +599,12 @@ void Stage_DrawTexCol(Gfx_Tex *tex, const RECT *src, const RECT_FIXED *dst, fixe
 	fixed_t wz = dst->w;
 	fixed_t hz = dst->h;
 	
-	if (stage.stage_id >= StageId_6_1 && stage.stage_id <= StageId_6_3)
+	//Don't draw if HUD and is disabled
+	if (tex == &stage.tex_hud0 || tex == &stage.tex_hud1)
 	{
-		//Handle HUD drawing
-		if (tex == &stage.tex_hud0)
-		{
-			#ifdef STAGE_NOHUD
-				return;
-			#endif
-			if (src->y >= 128 && src->y < 224)
-			{
-				//Pixel perfect scrolling
-				xz &= FIXED_UAND;
-				yz &= FIXED_UAND;
-				wz &= FIXED_UAND;
-				hz &= FIXED_UAND;
-			}
-		}
-		else if (tex == &stage.tex_hud1)
-		{
-			#ifdef STAGE_NOHUD
-				return;
-			#endif
-		}
-		else
-		{
-			//Pixel perfect scrolling
-			xz &= FIXED_UAND;
-			yz &= FIXED_UAND;
-			wz &= FIXED_UAND;
-			hz &= FIXED_UAND;
-		}
-	}
-	else
-	{
-		//Don't draw if HUD and is disabled
-		if (tex == &stage.tex_hud0 || tex == &stage.tex_hud1)
-		{
-			#ifdef STAGE_NOHUD
-				return;
-			#endif
-		}
+		#ifdef STAGE_NOHUD
+			return;
+		#endif
 	}
 	
 	fixed_t l = (SCREEN_WIDTH2  << FIXED_SHIFT) + FIXED_MUL(xz, zoom);// + FIXED_DEC(1,2);
@@ -976,38 +921,24 @@ static void Stage_DrawNotes(void)
 					note_dst.y = -note_dst.y - note_dst.h;
 				Stage_DrawTex(&stage.tex_hud0, &note_src, &note_dst, stage.bump);
 				
-				if (stage.stage_id == StageId_Clwn_4)
+				
+				//Draw note fire
+				note_src.x = 192 + ((animf_count & 0x1) << 5);
+				note_src.y = 64 + ((animf_count & 0x2) * 24);
+				note_src.w = 32;
+				note_src.h = 48;
+				
+				if (stage.downscroll)
 				{
-					//Draw note halo
-					note_src.x = 160;
-					note_src.y = 128 + ((animf_count & 0x3) << 3);
-					note_src.w = 32;
-					note_src.h = 8;
-					
-					note_dst.y -= FIXED_DEC(6,1);
-					note_dst.h >>= 2;
-					
-					Stage_DrawTex(&stage.tex_hud0, &note_src, &note_dst, stage.bump);
+					note_dst.y += note_dst.h;
+					note_dst.h = note_dst.h * -3 / 2;
 				}
 				else
 				{
-					//Draw note fire
-					note_src.x = 192 + ((animf_count & 0x1) << 5);
-					note_src.y = 64 + ((animf_count & 0x2) * 24);
-					note_src.w = 32;
-					note_src.h = 48;
-					
-					if (stage.downscroll)
-					{
-						note_dst.y += note_dst.h;
-						note_dst.h = note_dst.h * -3 / 2;
-					}
-					else
-					{
-						note_dst.h = note_dst.h * 3 / 2;
-					}
-					Stage_DrawTex(&stage.tex_hud0, &note_src, &note_dst, stage.bump);
+					note_dst.h = note_dst.h * 3 / 2;
 				}
+				Stage_DrawTex(&stage.tex_hud0, &note_src, &note_dst, stage.bump);
+				
 			}
 			else
 			{
@@ -1081,21 +1012,10 @@ static void Stage_LoadChart(void)
 {
 	//Load stage data
 	char chart_path[64];
-	if (stage.stage_def->week & 0x80)
-	{
-		//Use mod path convention
-		static const char *mod_format[] = {
-			"\\KAPI\\KAPI.%d%c.CHT;1", //Kapi
-			"\\CLWN\\CLWN.%d%c.CHT;1" //Tricky
-		};
-		
-		sprintf(chart_path, mod_format[stage.stage_def->week & 0x7F], stage.stage_def->week_song, "ENH"[stage.stage_diff]);
-	}
-	else
-	{
-		//Use standard path convention
-		sprintf(chart_path, "\\WEEK%d\\%d.%d%c.CHT;1", stage.stage_def->week, stage.stage_def->week, stage.stage_def->week_song, "ENH"[stage.stage_diff]);
-	}
+	
+	//Use standard path convention
+	sprintf(chart_path, "\\WEEK%d\\%d.%d%c.CHT;1", stage.stage_def->week, stage.stage_def->week, stage.stage_def->week_song, "ENH"[stage.stage_diff]);
+	
 	
 	if (stage.chart_data != NULL)
 		Mem_Free(stage.chart_data);
@@ -1239,16 +1159,11 @@ static void Stage_LoadState(void)
 
 	if (stage.story)
 	{
-		if (stage.stage_id >= StageId_6_1 && stage.stage_id <= StageId_6_3)
-		{
-			Stage_LoadDia();
-			stage.state = StageState_Dialogue;
-		}
-		else if (stage.stage_id >= StageId_7_1 && stage.stage_id <= StageId_7_3)
-		{
-			stage.state = StageState_Cutscene;
-		}
-		else
+		//else if (stage.stage_id >= StageId_7_1 && stage.stage_id <= StageId_7_3)
+		//{
+		//	stage.state = StageState_Cutscene;
+		//}
+		//else
 			stage.state = StageState_Play;
 	}
 	else
@@ -1301,10 +1216,7 @@ void Stage_Load(StageId id, StageDiff difficulty, boolean story)
 	stage.story = story;
 	
 	//Load HUD textures
-	if (id >= StageId_6_1 && id <= StageId_6_3)
-		Gfx_LoadTex(&stage.tex_hud0, IO_Read("\\STAGE\\HUD0WEEB.TIM;1"), GFX_LOADTEX_FREE);
-	else
-		Gfx_LoadTex(&stage.tex_hud0, IO_Read("\\STAGE\\HUD0.TIM;1"), GFX_LOADTEX_FREE);
+	Gfx_LoadTex(&stage.tex_hud0, IO_Read("\\STAGE\\HUD0.TIM;1"), GFX_LOADTEX_FREE);
 	Gfx_LoadTex(&stage.tex_hud1, IO_Read("\\STAGE\\HUD1.TIM;1"), GFX_LOADTEX_FREE);
 	
 	//Load stage background
@@ -1510,17 +1422,10 @@ void Stage_Tick(void)
 				else
 				#endif
 				{
-					if (stage.stage_id <= StageId_LastVanilla)
-					{
 						if (stage.story)
 							Menu_Load(MenuPage_Story);
 						else
 							Menu_Load(MenuPage_Freeplay);
-					}
-					else
-					{
-						Menu_Load(MenuPage_Mods);
-					}
 				}
 				LoadScr_End();
 				
@@ -1734,8 +1639,8 @@ void Stage_Tick(void)
 				boolean is_bump_step = (stage.song_step & 0xF) == 0;
 				
 				//M.I.L.F bumps
-				if (stage.stage_id == StageId_4_3 && stage.song_step >= (168 << 2) && stage.song_step < (200 << 2))
-					is_bump_step = (stage.song_step & 0x3) == 0;
+				//if (stage.stage_id == StageId_4_3 && stage.song_step >= (168 << 2) && stage.song_step < (200 << 2))
+				//	is_bump_step = (stage.song_step & 0x3) == 0;
 				
 				//Bump screen
 				if (is_bump_step)
@@ -2111,102 +2016,53 @@ void Stage_Tick(void)
 			Stage *this = (Stage*)this;
 
 			//play dialogue song
-			if (Audio_PlayingXA() != 1)
-			{
-				switch (stage.stage_id)
-				{
-					case StageId_6_1:
-						Audio_PlayXA_Track(XA_Lunchbox, 0x40, 0, true); //play song
-						break;
-					case StageId_6_3:
-						Audio_PlayXA_Track(XA_LunchboxScary, 0x40, 1, true); //playsong
-						break;
-				}
-			}
+			//if (Audio_PlayingXA() != 1)
+			//{
+			//	switch (stage.stage_id)
+			//	{
+			//		case StageId_6_1:
+			//			Audio_PlayXA_Track(XA_Lunchbox, 0x40, 0, true); //play song
+			//			break;
+			//		case StageId_6_3:
+			//			Audio_PlayXA_Track(XA_LunchboxScary, 0x40, 1, true); //playsong
+			//			break;
+			//	}
+			//}
 
 			//Text drawing
 			switch (stage.stage_id)
 			{
-				case StageId_6_1:
-				{
-					//draw main text
-					stage.font_arial.draw_col(&stage.font_arial,
-						senpaidia[dselect].text,
-						35,
-						150,
-						FontAlign_Left,
-						52 >> 1,
-						29 >> 1,
-						31 >> 1
-					);
-					//draw pink text behind
-					stage.font_arial.draw_col(&stage.font_arial,
-						senpaidia[dselect].text,
-						36,
-						151,
-						FontAlign_Left,
-						187 >> 1,
-						122 >> 1,
-						123 >> 1
-					);
+				//case StageId_6_1:
+				//{
+				//	//draw main text
+				//	stage.font_arial.draw_col(&stage.font_arial,
+				//		senpaidia[dselect].text,
+				//		35,
+				//		150,
+				//		FontAlign_Left,
+				//		52 >> 1,
+				//		29 >> 1,
+				//		31 >> 1
+				//	);
+				//	//draw pink text behind
+				//	stage.font_arial.draw_col(&stage.font_arial,
+				//		senpaidia[dselect].text,
+				//		36,
+				//		151,
+				//		FontAlign_Left,
+				//		187 >> 1,
+				//		122 >> 1,
+				//		123 >> 1
+				//	);
 
-					if (dselect == 3)
-					{
-						Audio_StopXA();
-						stage.state = StageState_Play;
-					}
-					Dia_MovePort(senpaidia[dselect].talker);
-					break;
-				}
-				case StageId_6_2:
-				{
-					//draw main text
-					stage.font_arial.draw_col(&stage.font_arial,
-						rosesdia[dselect].text,
-						35,
-						150,
-						FontAlign_Left,
-						52 >> 1,
-						29 >> 1,
-						31 >> 1
-					);
-					//draw pink text behind
-					stage.font_arial.draw_col(&stage.font_arial,
-						rosesdia[dselect].text,
-						36,
-						151,
-						FontAlign_Left,
-						187 >> 1,
-						122 >> 1,
-						123 >> 1
-					);
-
-					if (dselect == 3)
-					{
-						Audio_StopXA();
-						stage.state = StageState_Play;
-					}
-					Dia_MovePort(rosesdia[dselect].talker);
-					break;
-				}
-				case StageId_6_3:
-				{
-					//draw text
-					stage.font_arial.draw(&stage.font_arial,
-						thornsdia[dselect].text,
-						35,
-						150,
-						FontAlign_Left
-					);
-
-					if (dselect == 5)
-					{
-						Audio_StopXA();
-						stage.state = StageState_Play;
-					}
-					Dia_MovePort(thornsdia[dselect].talker);
-					break;
-				}
+				//	if (dselect == 3)
+				//	{
+				//		Audio_StopXA();
+				//		stage.state = StageState_Play;
+				//	}
+				//	Dia_MovePort(senpaidia[dselect].talker);
+				//	break;
+				//}
 				default:
 					break;
 			}
@@ -2222,29 +2078,10 @@ void Stage_Tick(void)
 			//draw dialogue box
 			RECT weebbox_dst = {5, 114, 155 * 2, 58 * 2};
 
-			switch (stage.stage_id)
-			{
-				case StageId_6_3:
-					Gfx_DrawRect(&spookbox, 0, 0, 0);
-					break;
-				default:
-					Gfx_DrawTex(&stage.tex_hud1, &weebbox_src, &weebbox_dst);
-					break;
-			}
-
 
 			RECT senpai_dst = {senpaix, 14, senpai_src.w * 2, senpai_src.h * 2};
 
 			RECT senmad_dst = {senpaix, 12, senmad_src.w * 2, senmad_src.h * 2};
-
-			switch (stage.stage_id)
-			{
-				case StageId_6_1:
-					Gfx_DrawTex(&stage.tex_hud1, &senpai_src, &senpai_dst);
-					break;
-				case StageId_6_2:
-					Gfx_DrawTex(&stage.tex_hud1, &senmad_src, &senmad_dst);
-			}
 
 			RECT bf_dst = {bfx, 38, bf_src.w * 2, bf_src.h * 2};
 			Gfx_DrawTex(&stage.tex_hud1, &bf_src, &bf_dst);
@@ -2289,7 +2126,7 @@ void Stage_Tick(void)
 		{
 			if (Audio_PlayingXA() != 1)
 			{
-				Audio_PlayXA_Track(XA_KlaskiiRomper, 0x40, 2, true); //play song
+				//Audio_PlayXA_Track(XA_KlaskiiRomper, 0x40, 2, true); //play song
 			}
 
 			//Draw stage foreground

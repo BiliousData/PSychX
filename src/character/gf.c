@@ -116,10 +116,6 @@ void Char_GF_Tick(Character *character)
 {
 	Char_GF *this = (Char_GF*)character;
 	
-	//Initialize Pico test
-	if (stage.stage_id == StageId_7_3 && stage.back != NULL && this->pico_p == NULL)
-		this->pico_p = ((Back_Week7*)stage.back)->pico_chart;
-	
 	if (this->pico_p != NULL)
 	{
 		if (stage.note_scroll >= 0)
@@ -270,10 +266,7 @@ Character *Char_GF_New(fixed_t x, fixed_t y)
 	Speaker_Init(&this->speaker);
 	
 	//Initialize Pico test
-	if (stage.stage_id == StageId_7_3 && stage.back != NULL)
-		this->pico_p = ((Back_Week7*)stage.back)->pico_chart;
-	else
-		this->pico_p = NULL;
+	this->pico_p = NULL;
 
 	this->character.hr = 165;
 	this->character.hg = 0;
